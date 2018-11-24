@@ -1,6 +1,7 @@
 import argparse
 import os
 import hashlib
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", help='to wrap file')
@@ -28,8 +29,6 @@ file_size_list = [
     file_size - one_file_size * 9
 ]
 
-print(file_size_list)
-
 def getHashName(byte_seq):
     hasher = hashlib.md5()
     hasher.update(byte_seq)
@@ -43,12 +42,24 @@ def checkHash(path, blocksize):
     file.close()
     return hash.hexdigest()
 
-file_size_index = 0
+json_result = {
+    "actual_name": "",
+    "hash_list": "",
+    "size": ""
+}
+
+list = []
 with open(args.file, "rb") as f:
     for i in range(0, 10):
         byte = f.read(file_size_list[i])
         file_name = getHashName(byte)
+        list.append(file_name)
         with open(create_folder + file_name, "wb") as output:
             output.write(byte)
             output.close()
         print(file_name + " " + str(file_size_list[i]) + " " + checkHash(file_name, file_size_list[i]))
+
+json_result["actual_name"] = args.file
+json_result["hash_list"] = list
+json_result["size"] = file_size
+print(json.dumps(json_result, indent=2))
