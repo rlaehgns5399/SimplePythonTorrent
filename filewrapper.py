@@ -1,5 +1,6 @@
 import argparse
 import os
+import hashlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", help='to wrap file')
@@ -29,9 +30,13 @@ file_size_list = [
 
 print(file_size_list)
 
+def getHash(byte_seq):
+    hasher = hashlib.md5()
+    hasher.update(byte_seq)
+    return hasher.hexdigest()
+
 file_size_index = 0
 with open(args.file, "rb") as f:
-    for i in range(1, 10):
+    for i in range(0, 10):
         byte = f.read(file_size_list[i])
-
-        print(byte)
+        print(getHash(byte))
