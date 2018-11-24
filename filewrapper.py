@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--file", help='to wrap file')
 args = parser.parse_args()
 
-
+create_folder = "file/"
 file_size = os.path.getsize(args.file)
 # 100 바이트 이하면 가치없다고 판단하고 종료
 if file_size < 100:
@@ -30,13 +30,25 @@ file_size_list = [
 
 print(file_size_list)
 
-def getHash(byte_seq):
+def getHashName(byte_seq):
     hasher = hashlib.md5()
     hasher.update(byte_seq)
     return hasher.hexdigest()
+
+def checkHash(path, blocksize):
+    hash = hashlib.md5()
+    with open(create_folder + path, 'rb') as file:
+        buf = file.read(blocksize)
+        hash.update(buf)
+    file.close()
+    return hash.hexdigest()
 
 file_size_index = 0
 with open(args.file, "rb") as f:
     for i in range(0, 10):
         byte = f.read(file_size_list[i])
-        print(getHash(byte))
+        file_name = getHashName(byte)
+        with open(create_folder + file_name, "wb") as output:
+            output.write(byte)
+            output.close()
+        print(file_name + " " + str(file_size_list[i]) + " " + checkHash(file_name, file_size_list[i]))
