@@ -53,7 +53,7 @@ class Sender(threading.Thread):
             s.shutdown(2)
             s.close()
 
-def main():
+def main(target_file):
     my_host = "localhost"
     my_port = int(args.port)
     receiver = Receiver(my_host, my_port)
@@ -63,4 +63,4 @@ def main():
     treads = [receiver.start(), sender.start()]
 
 if __name__ == '__main__':
-    main()
+    main(args.file)
