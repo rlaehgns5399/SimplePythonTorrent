@@ -21,7 +21,7 @@ class Receiver(threading.Thread):
     def listen(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((self.host, self.port))
-        sock.listen(10)
+        sock.listen(5)
         while True:
             connection, client_address = sock.accept()
             try:
@@ -46,9 +46,9 @@ class Sender(threading.Thread):
 
     def run(self):
         while True:
-            message = input("")
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
+            message = input("")
             s.sendall((message.encode(ENCODING)))
             s.shutdown(2)
             s.close()
