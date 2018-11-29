@@ -56,6 +56,7 @@ def client(conn, port):
     global target_file
     # status #
     # 0 : ready
+    # 1 : find peers
     #
     # command #
     # c: connect server
@@ -89,7 +90,7 @@ def client(conn, port):
             sem.release()
 
             print("[*] Server received file name: " + data)
-            print("[*] Find peers which has file")
+            print("[*] Find peers who has file")
 
             broadcast_except_requester(data, conn)
 
