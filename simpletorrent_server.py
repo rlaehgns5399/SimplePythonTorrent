@@ -80,12 +80,21 @@ def client(conn, port):
             sem.release()
 
             print("[*] client {} want to request file".format(port))
-            broadcast("go_ahead")
+            conn.sendall("go_ahead".encode("utf-8"))
+            broadcast_except_requester("go_ahead_another", conn)
+            # broadcast("go_ahead")
+
         elif status == 0 and ".simpletorrent" in data:
             sem.acquire()
             status = 1
             target_file = data
             sem.release()
+
+            print("[*] Server received file name: " + data)
+            print("[*] Find peers which has file")
+
+            # broadcast_except_requester(data)
+
 
 
     conn.close()
@@ -94,7 +103,14 @@ def broadcast(text):
     global conn_array
 
     for conn in conn_array:
-        conn.sendall("go_ahead".encode("utf-8"))
+        conn.sendall(text.encode("utf-8"))
+
+def broadcast_except_requester(text, conn):
+    global conn_array
+
+    for conn_iterator in conn_array:
+        if conn_iterator != conn:
+            conn_iterator.sendall(text.encode("utf-8"))
 
 # def reply(text):
 

@@ -6,6 +6,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-port", help="to connect server, enter port")
 args = parser.parse_args()
 
+allowInput = True
+
 def recvmsg(sock):
     while True:
         try:
@@ -14,7 +16,10 @@ def recvmsg(sock):
                 break
             data = data.decode("utf-8")
             if data == "go_ahead":
-                print("[Server] received upload request. input simpletorrent file")
+                print("[*] received upload request. input simpletorrent file")
+            elif data == "go_ahead_another":
+                print("[*] Server doesn't allow to input something. wait")
+
         except:
             pass
 
@@ -26,9 +31,9 @@ recvThread = threading.Thread(target=recvmsg, args=(server,))
 recvThread.daemon = True
 recvThread.start()
 
-while True:
+while allowInput:
     msg = input("")
     if msg == "exit":
-        server.sendall("client_bye".encode("utf-8"))
+        server.sendall("bye".encode("utf-8"))
         break
     server.sendall(msg.encode("utf-8"))
