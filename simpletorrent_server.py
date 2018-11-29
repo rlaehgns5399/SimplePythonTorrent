@@ -2,6 +2,7 @@ import socket
 import threading
 import argparse
 import time
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-port", help="your server port")
@@ -9,6 +10,7 @@ arg = parser.parse_args()
 
 status = None
 target_file = None
+target_file_json = None
 
 conn_array = []
 addr_array = []
@@ -22,11 +24,6 @@ class Server(threading.Thread):
         threading.Thread.__init__(self)
         self.port = my_port
         self.sock = None
-
-        self.peers = {}
-        self.peers_counter = 0
-        self.peers_socket = {}
-
 
     def bind(self):
         global conn_array
@@ -61,9 +58,9 @@ def client(conn, port):
     # 0 : ready
     #
     # command #
-    # c: connect_server
-    # r: request_file
-    # filename.simpletorrent after r : server notify file
+    # c: connect server
+    # r: request file
+    # filename.simpletorrent after r : server notify file and request to server to find file
     #
     ###
     while True:
@@ -73,6 +70,7 @@ def client(conn, port):
             break
         if data == "c":
             print("[*] port {}, Connected to server!".format(port))
+
         elif data == "r":
 
             sem.acquire()
@@ -82,9 +80,9 @@ def client(conn, port):
             print("[*] client {} want to request file".format(port))
             conn.sendall("go_ahead".encode("utf-8"))
             broadcast_except_requester("go_ahead_another", conn)
-            # broadcast("go_ahead")
 
         elif status == 0 and ".simpletorrent" in data:
+
             sem.acquire()
             status = 1
             target_file = data
@@ -93,7 +91,7 @@ def client(conn, port):
             print("[*] Server received file name: " + data)
             print("[*] Find peers which has file")
 
-            # broadcast_except_requester(data)
+            broadcast_except_requester(data, conn)
 
 
 

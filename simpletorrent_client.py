@@ -1,12 +1,11 @@
 import socket
 import argparse
 import threading
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-port", help="to connect server, enter port")
 args = parser.parse_args()
-
-allowInput = True
 
 def recvmsg(sock):
     while True:
@@ -19,7 +18,9 @@ def recvmsg(sock):
                 print("[*] received upload request. input simpletorrent file")
             elif data == "go_ahead_another":
                 print("[*] Server doesn't allow to input something. wait")
-
+            else:
+                print("[*] find " + data)
+                # finding algorithm
         except:
             pass
 
@@ -31,7 +32,7 @@ recvThread = threading.Thread(target=recvmsg, args=(server,))
 recvThread.daemon = True
 recvThread.start()
 
-while allowInput:
+while True:
     msg = input("")
     if msg == "exit":
         server.sendall("bye".encode("utf-8"))
