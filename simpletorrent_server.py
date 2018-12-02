@@ -3,14 +3,16 @@ import threading
 import argparse
 import time
 import json
+import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-port", help="your server port")
 arg = parser.parse_args()
 
 status = None
+peer_count = 0
 target_file = None
-target_file_json = None
+peer_data_list = []
 
 conn_array = []
 addr_array = []
@@ -52,8 +54,12 @@ class Server(threading.Thread):
 
 
 def client(conn, port):
+    global conn_array
     global status
     global target_file
+    global peer_data_list
+    global peer_count
+
     # status #
     # 0 : ready
     # 1 : find peers
@@ -65,37 +71,54 @@ def client(conn, port):
     #
     ###
     while True:
-        data = conn.recv(1024)
-        data = data.decode("utf-8")
-        if not data:
+        try:
+            data = conn.recv(8092)
+            if status != 1:
+                data = data.decode("utf-8")
+
+            if not data:
+                break
+            if data == "c":
+                print("[*] port {}, Connected to server!".format(port))
+
+            elif data == "r":
+
+                sem.acquire()
+                status = 0
+                sem.release()
+
+                print("[*] client {} want to request file".format(port))
+                conn.sendall("go_ahead".encode("utf-8"))
+                broadcast_except_requester("go_ahead_another", conn)
+
+            elif status == 0 and ".simpletorrent" in data:
+
+                sem.acquire()
+                status = 1
+                target_file = data
+                peer_count = 0
+                peer_data_list = []
+                sem.release()
+
+                print("[*] Server received file name: " + data)
+                print("[*] Find peers who has file")
+
+                broadcast_except_requester(data, conn)
+
+            elif status == 1 and data is not None:
+
+                sem.acquire()
+                peer_count += 1
+                temp_item = pickle.loads(data)
+                peer_data_list.append(temp_item)
+                print("{} >> ".format(port), json.dumps(temp_item))
+                if peer_count == len(conn_array)-1:
+                    status = 2
+                    print("[*] Collecing data.... Done")
+                sem.release()
+        except ConnectionResetError:
+            print("[*] port " + str(port) + " - bye~!")
             break
-        if data == "c":
-            print("[*] port {}, Connected to server!".format(port))
-
-        elif data == "r":
-
-            sem.acquire()
-            status = 0
-            sem.release()
-
-            print("[*] client {} want to request file".format(port))
-            conn.sendall("go_ahead".encode("utf-8"))
-            broadcast_except_requester("go_ahead_another", conn)
-
-        elif status == 0 and ".simpletorrent" in data:
-
-            sem.acquire()
-            status = 1
-            target_file = data
-            sem.release()
-
-            print("[*] Server received file name: " + data)
-            print("[*] Find peers who has file")
-
-            broadcast_except_requester(data, conn)
-
-
-
     conn.close()
 
 def broadcast(text):

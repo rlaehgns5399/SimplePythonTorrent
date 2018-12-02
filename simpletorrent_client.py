@@ -3,6 +3,8 @@ import argparse
 import threading
 import json
 import random
+import pickle
+
 from random import shuffle
 
 parser = argparse.ArgumentParser()
@@ -20,17 +22,19 @@ def openfile(sock, data):
     with open(data, "r") as f:
         target_file = json.load(f)
         # pick 0 ~ 10
-        howmany = random.randrange(0, 10)
+        howmany = random.randrange(8, 10)
         for i in range(0, 10):
             tempshufflelist.append(i)
         shuffle(tempshufflelist)
-        tempshufflelist = tempshufflelist[0:howmany-1]
+        tempshufflelist = tempshufflelist[0:howmany]
         for i in tempshufflelist:
             my_file_list.append(target_file["hash_list"][i])
+        target_file["hash_list"] = my_file_list
         print("result: there are " + str(howmany*100/10) + "% of file")
         print(my_file_list)
 
-        # send to server, my percentage
+        sock.sendall(pickle.dumps(target_file))
+
 
 def recvmsg(sock):
     global target_file
